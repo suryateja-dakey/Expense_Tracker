@@ -1,3 +1,4 @@
+import 'package:expense_tracker/pages/add_expenses.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/expense_controller.dart';
@@ -65,8 +66,11 @@ class HomePage extends StatelessWidget {
                 padding: EdgeInsets.only(top: 20, right: 20),
                 child: Align(
                   alignment: Alignment.topRight,
-                  child: Icon(Icons.dehaze_outlined,
-                      color: Colors.green, size: 24),
+                  child: Icon(
+                    Icons.dehaze_outlined,
+                    color: Colors.green,
+                    size: 24,
+                  ),
                 ),
               ),
               const Padding(
@@ -97,8 +101,7 @@ class HomePage extends StatelessWidget {
                           onTap: () {
                             controller.setFocusedIndex(index);
 
-                            WidgetsBinding.instance
-                                .addPostFrameCallback((_) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
                               _animateToIndex(index, screenWidth);
                             });
                           },
@@ -131,12 +134,12 @@ class HomePage extends StatelessWidget {
                     horizontal: (screenWidth - cardWidth) / 2,
                   ),
                   child: Obx(() {
-                    final cards =
-                        controller.categories.asMap().entries.map((entry) {
+                    final cards = controller.categories.asMap().entries.map((
+                      entry,
+                    ) {
                       final index = entry.key;
                       final category = entry.value;
-                      final isFocused =
-                          controller.focusedIndex.value == index;
+                      final isFocused = controller.focusedIndex.value == index;
 
                       return Padding(
                         padding: const EdgeInsets.only(right: cardSpacing),
@@ -153,15 +156,21 @@ class HomePage extends StatelessWidget {
                               alignment: Alignment.center,
                               child: Opacity(
                                 opacity: isFocused ? 1.0 : 0.6,
-                                child: CustomStyledCard(
-                                  categoryName:
-                                      category['name'].toString(),
-                                  imagePath:
-                                      category['image'].toString(),
-                                  amountUsed:
-                                      category['amount'].toString(),
-                                  cardColors:
-                                      category['color'] as Color,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AddExpensePage(),
+                                      ),
+                                    );
+                                  },
+                                  child: CustomStyledCard(
+                                    categoryName: category['name'].toString(),
+                                    imagePath: category['image'].toString(),
+                                    amountUsed: category['amount'].toString(),
+                                    cardColors: category['color'] as Color,
+                                  ),
                                 ),
                               ),
                             );
@@ -169,7 +178,7 @@ class HomePage extends StatelessWidget {
                         ),
                       );
                     }).toList();
-   
+
                     return Row(children: cards);
                   }),
                 ),
