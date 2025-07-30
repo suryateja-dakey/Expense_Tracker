@@ -30,9 +30,9 @@ class ExpenseApp extends StatelessWidget {
         textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.white)),
       ),
       home:
-      Login(), 
+      // Login(), 
         // HomePage(),
-      // FirebaseAuth.instance.currentUser!=null?HomePage(): Login(), 
+      FirebaseAuth.instance.currentUser!=null?HomePage(): Login(), 
     );
   }
 }

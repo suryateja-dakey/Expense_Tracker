@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -6,7 +7,7 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
-  
+  final int maxLines;
 
   const CustomTextField({
     super.key,
@@ -15,7 +16,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
     this.validator,
-   
+    this.maxLines = 1,
   });
 
   @override
@@ -29,8 +30,12 @@ class CustomTextField extends StatelessWidget {
         keyboardType: keyboardType,
         style: theme.textTheme.bodyMedium,
         validator: validator,
+        maxLines: maxLines,
         decoration: _inputDecoration(context, hintText),
-      ),
+      )
+          .animate()
+          .fadeIn(duration: 300.ms)
+          .slideY(begin: 0.2),
     );
   }
 

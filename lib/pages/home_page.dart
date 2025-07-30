@@ -1,21 +1,67 @@
+// ignore_for_file: use_key_in_widget_constructors, avoid_print
+
+import 'package:expense_tracker/firebase_services/firebase_core_calls.dart';
+import 'package:expense_tracker/firebase_services/firebase_get_expenses.dart';
 import 'package:expense_tracker/pages/add_expenses.dart';
+import 'package:expense_tracker/pages/authentications/login.dart';
+import 'package:expense_tracker/pages/monthly_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/expense_controller.dart';
 import '../widgets/custom_styled_card.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({super.key}) {
-    _scrollController.addListener(_onScroll);
-  }
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final controller = Get.put(ExpenseController());
   final ScrollController _scrollController = ScrollController();
-
   static const double cardWidth = 186.0;
   static const double cardSpacing = 35.0;
-
   bool _isAnimating = false;
+  dynamic expenses;
+  final repo = Repository();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    getExpenseData();
+  }
+
+  Future<dynamic> getExpenseData() async {
+    expenses = await GetExpenses().fetchUserExpenses();
+    dynamic totalLoans;
+    for (int i = 0; i < controller.categories.length; i++) {
+      totalLoans = calculateTotalAmount(
+        expenses: expenses,
+        types: [controller.categories[i]['name'].toString()],
+      );
+      controller.categories[i]['amount'] = totalLoans;
+      print('Total spent on ${controller.categories[i]['name']}: ₹$totalLoans');
+    }
+    setState(() {});
+    return expenses;
+  }
+
+  double calculateTotalAmount({
+    required List<Map<String, dynamic>> expenses,
+    List<String>? types,
+    List<String>? categories,
+  }) {
+    return expenses
+        .where((expense) {
+          final matchesType = types == null || types.contains(expense['type']);
+          final matchesCategory =
+              categories == null || categories.contains(expense['category']);
+          return matchesType && matchesCategory;
+        })
+        .fold(0.0, (sum, expense) => sum + (expense['amount'] ?? 0));
+  }
 
   void _onScroll() {
     if (_isAnimating) return;
@@ -62,17 +108,46 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 20, right: 20),
+              // Top-right Menu
+              Padding(
+                padding: const EdgeInsets.only(top: 20, right: 20),
                 child: Align(
                   alignment: Alignment.topRight,
-                  child: Icon(
-                    Icons.dehaze_outlined,
-                    color: Colors.green,
-                    size: 24,
+                  child: PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.dehaze_outlined,
+                      color: Color(0xFF7ACB78),
+                      size: 24,
+                    ),
+                    offset: const Offset(0, 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(
+                        color: Color(0xFF7ACB78),
+                        width: 2,
+                      ),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'settings') {
+                        print('Navigate to Settings');
+                      } else if (value == 'logout') {
+                        print('Logging out...');
+                        repo.signOut();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const Login()),
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'settings', child: Text('Settings')),
+                      PopupMenuItem(value: 'logout', child: Text('Logout')),
+                    ],
                   ),
                 ),
               ),
+
+              // Title
               const Padding(
                 padding: EdgeInsets.only(top: 20, left: 28),
                 child: Text(
@@ -85,6 +160,8 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
               ),
+
+              // Category Names (horizontal)
               Padding(
                 padding: const EdgeInsets.only(top: 30, left: 20),
                 child: SizedBox(
@@ -100,7 +177,6 @@ class HomePage extends StatelessWidget {
                         return GestureDetector(
                           onTap: () {
                             controller.setFocusedIndex(index);
-
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               _animateToIndex(index, screenWidth);
                             });
@@ -123,7 +199,10 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
               ),
+
               const SizedBox(height: 32),
+
+              // Horizontal Scroll Cards
               SizedBox(
                 height: 464,
                 child: SingleChildScrollView(
@@ -161,7 +240,7 @@ class HomePage extends StatelessWidget {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => AddExpensePage(),
+                                        builder: (_) => const ThisMonthExpensesPage(),
                                       ),
                                     );
                                   },
@@ -170,6 +249,15 @@ class HomePage extends StatelessWidget {
                                     imagePath: category['image'].toString(),
                                     amountUsed: category['amount'].toString(),
                                     cardColors: category['color'] as Color,
+                                    addExpenseOnTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const AddExpensePage(),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),

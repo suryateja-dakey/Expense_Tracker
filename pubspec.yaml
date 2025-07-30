@@ -50,5 +50,6 @@ flutter:
     - assets/
     - assets/expense_category_items/
     - assets/file_svgs/
+    - assets/expense_monthly_svgs/
 
 

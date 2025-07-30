@@ -6,13 +6,15 @@ class CustomStyledCard extends StatelessWidget {
   final String imagePath;
   final String amountUsed;
   final Color cardColors;
+  dynamic addExpenseOnTap;
 
-  const CustomStyledCard({
+   CustomStyledCard({
     super.key,
     required this.categoryName,
     required this.imagePath,
     required this.amountUsed,
     required this.cardColors,
+    this.addExpenseOnTap,
   });
 
   @override
@@ -46,58 +48,75 @@ class CustomStyledCard extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.only(left: paddingLeft, top: 8 * scale),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        "Add Expense",
-                        style: TextStyle(
-                          fontSize: 13 * scale,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.add_circle_outline,
-                            color: Colors.black, size: 18 * scale),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 6 * scale),
-                  Text(
-                    categoryName,
-                    style: TextStyle(
-                      fontSize: 20 * scale,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 16 * scale),
-                  Text(
-                    "Used",
-                    style: TextStyle(
-                      fontSize: 13 * scale,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    "₹$amountUsed",
-                    style: TextStyle(
-                      fontSize: 22 * scale,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
+           Padding(
+  padding: EdgeInsets.only(left: paddingLeft, right: paddingLeft, top: 16 * scale),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      
+      SizedBox(height: 12 * scale),
+      Text(
+        categoryName,
+        style: TextStyle(
+          fontSize: 20 * scale,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+      ),
+      SizedBox(height: 16 * scale),
+      Text(
+        "Used",
+        style: TextStyle(
+          fontSize: 13 * scale,
+          color: Colors.black87,
+        ),
+      ),
+      Text(
+        "₹$amountUsed",
+        style: TextStyle(
+          fontSize: 22 * scale,
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ),
+      ),
+      SizedBox(height: 26 * scale),
+      Center(
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Colors.black54, width: 1),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onPressed:addExpenseOnTap,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Add Expense",
+                style: TextStyle(
+                  fontSize: 10 * scale,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.add_circle_outline,
+                color: Colors.black,
+                size: 12 * scale,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  ),
+),
+
           ],
         ),
       ),

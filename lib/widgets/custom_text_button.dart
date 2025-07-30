@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -19,7 +20,8 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
+
+    final button = SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
@@ -48,5 +50,10 @@ class PrimaryButton extends StatelessWidget {
               ),
       ),
     );
+
+    return button
+        .animate()
+        .fadeIn(duration: 300.ms)
+        .scale(begin: const Offset(0.9, 0.9));
   }
 }
