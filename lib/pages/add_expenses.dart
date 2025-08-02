@@ -1,18 +1,18 @@
-import 'dart:convert';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expense_tracker/firebase_services/firebase_get_expenses.dart';
+import 'package:expense_tracker/pages/home_page.dart';
+import 'package:expense_tracker/widgets/common_app_bar.dart';
 import 'package:expense_tracker/widgets/common_date_field.dart';
 import 'package:expense_tracker/widgets/custom_dropdown_field.dart';
 import 'package:expense_tracker/widgets/custom_text_button.dart';
 import 'package:expense_tracker/widgets/custom_text_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:intl/intl.dart';
 import 'package:get/get.dart';
-import 'package:expense_tracker/widgets/common_app_bar.dart';
 import 'package:expense_tracker/controllers/expense_controller.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+
 
 class AddExpensePage extends StatefulWidget {
   const AddExpensePage({super.key});
@@ -25,7 +25,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final ExpenseController controller = Get.put(ExpenseController());
-
   DateTime? _selectedDate;
   String? selectedCategory;
   String? selectedSubCategory;
@@ -33,7 +32,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
   String? selectedPaymentMode;
   bool _remindWeekly = false;
   bool _remindMonthly = false;
-
   final ScrollController _typeScrollController = ScrollController();
 
   final darkCardColor = const Color(0xFF2D2D2D);
@@ -51,14 +49,86 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
   void _scrollToSelectedType(int index) {
     double itemWidth = 120.0;
-    double offset =
-        index * itemWidth - (MediaQuery.of(context).size.width - itemWidth) / 2;
+    double offset = index * itemWidth - (MediaQuery.of(context).size.width - itemWidth) / 2;
     _typeScrollController.animateTo(
       offset.clamp(0.0, _typeScrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOutCubic,
     );
   }
+
+  void _resetForm() {
+    _amountController.clear();
+    _notesController.clear();
+    setState(() {
+      _selectedDate = null;
+      selectedCategory = null;
+      selectedSubCategory = null;
+      selectedSubSubCategory = null;
+      selectedPaymentMode = null;
+      _remindWeekly = false;
+      _remindMonthly = false;
+    });
+  }
+
+ void _showSuccessDialog() {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        'Expense Saved!',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.8, 0.8)),
+      content: const Text(
+        'Would you like to go to the home page or add another expense?',
+        style: TextStyle(color: Colors.white70),
+      ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.2),
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) =>  HomePage()),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: const Text('Go to Home'),
+              ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideX(begin: -0.3),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                  _resetForm(); // Reset form for adding another expense
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: const Text('Add Another'),
+              ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideX(begin: 0.3),
+            ),
+          ],
+        ),
+      ],
+    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9)),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -85,9 +155,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   controller: _typeScrollController,
                   physics: const BouncingScrollPhysics(),
                   child: Row(
-                    children: List.generate(controller.categories.length, (
-                      index,
-                    ) {
+                    children: List.generate(controller.categories.length, (index) {
                       bool isSelected = controller.focusedIndex.value == index;
                       return GestureDetector(
                         onTap: () {
@@ -101,10 +169,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         child: Container(
                           width: 120,
                           margin: const EdgeInsets.symmetric(horizontal: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? controller.categories[index]['color'] as Color
@@ -116,9 +181,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                               controller.categories[index]['name'] as String,
                               style: TextStyle(
                                 color: isSelected ? Colors.black : Colors.white,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
                           ),
@@ -134,8 +197,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
             CustomDropdownField(
               hintText: 'Select Category',
               items: controller.getSubCategories(
-                controller.categories[controller.focusedIndex.value]['name']
-                    as String,
+                controller.categories[controller.focusedIndex.value]['name'] as String,
               ),
               selectedItem: selectedSubCategory,
               onChanged: (value) => setState(() {
@@ -151,8 +213,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
               CustomDropdownField(
                 hintText: 'Select Subcategory',
                 items: controller.getSubSubCategories(
-                  controller.categories[controller.focusedIndex.value]['name']
-                      as String,
+                  controller.categories[controller.focusedIndex.value]['name'] as String,
                   selectedSubCategory!,
                 ),
                 selectedItem: selectedSubSubCategory,
@@ -172,12 +233,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
             ),
 
             const SizedBox(height: 16),
+
             // Amount Field
             CustomTextField(
               controller: _amountController,
               hintText: 'Enter Amount',
               keyboardType: TextInputType.number,
             ),
+
             const SizedBox(height: 16),
 
             // Date Picker
@@ -185,67 +248,62 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
             const SizedBox(height: 12),
 
-Container(
-  margin: const EdgeInsets.only(top: 16),
-  padding: const EdgeInsets.all(16),
-  decoration: BoxDecoration(
-    color: darkCard,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.1),
-        blurRadius: 10,
-        offset: const Offset(0, 4),
-      ),
-    ],
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        'Set Reminders',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-      const SizedBox(height: 12),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text(
-          'Weekly',
-          style: TextStyle(color: Colors.white),
-        ),
-        value: _remindWeekly,
-        inactiveThumbColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
-        activeColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
-        onChanged: (bool value) {
-          setState(() {
-            _remindWeekly = value;
-            if (value) _remindMonthly = false;
-          });
-        },
-      ),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text(
-          'Monthly',
-          style: TextStyle(color: Colors.white),
-        ),
-        value: _remindMonthly,
-        inactiveThumbColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
-        activeColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
-        onChanged: (bool value) {
-          setState(() {
-            _remindMonthly = value;
-            if (value) _remindWeekly = false;
-          });
-        },
-      ),
-    ],
-  ),
-),
+            // Reminders
+            Container(
+              margin: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: darkCard,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Set Reminders',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Obx(() => SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Weekly', style: TextStyle(color: Colors.white)),
+                        value: _remindWeekly,
+                        inactiveThumbColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
+                        activeColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
+                        onChanged: (bool value) {
+                          setState(() {
+                            _remindWeekly = value;
+                            if (value) _remindMonthly = false;
+                          });
+                        },
+                      )),
+                  Obx(() => SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Monthly', style: TextStyle(color: Colors.white)),
+                        value: _remindMonthly,
+                        inactiveThumbColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
+                        activeColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
+                        onChanged: (bool value) {
+                          setState(() {
+                            _remindMonthly = value;
+                            if (value) _remindWeekly = false;
+                          });
+                        },
+                      )),
+                ],
+              ),
+            ),
 
             const SizedBox(height: 12),
 
@@ -255,37 +313,18 @@ Container(
               hintText: 'Notes (optional)',
               maxLines: 3,
             ),
-            const SizedBox(height: 16),
-            PrimaryButton(
-              label: 'Save Expense',
-              onPressed: _submitExpense,
-              backgroundColor:
-                  controller.categories[controller.focusedIndex.value]['color']
-                      as Color,
 
-              textColor: Colors.black,
-            ),
+            const SizedBox(height: 16),
+
+            // Submit Button
+            Obx(() => PrimaryButton(
+                  label: 'Save Expense',
+                  onPressed: _submitExpense,
+                  backgroundColor: controller.categories[controller.focusedIndex.value]['color'] as Color,
+                  textColor: Colors.black,
+                )),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPreviewRow(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Text("$label:", style: const TextStyle(color: Colors.grey)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              value?.isNotEmpty == true ? value! : '-',
-              style: const TextStyle(color: Colors.white),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -293,7 +332,7 @@ Container(
   void _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
       builder: (context, child) => Theme(data: ThemeData.dark(), child: child!),
@@ -304,76 +343,52 @@ Container(
       });
     }
   }
- 
 
   void _submitExpense() async {
-  final user = FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
-  if (user == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User not logged in!')),
-    );
-    return;
-  }
-
-  final category = controller.categories[controller.focusedIndex.value]['name'];
-  final color = controller.categories[controller.focusedIndex.value]['color'] as Color;
-
-  final expenseData = {
-    'type': category,
-    'date': _selectedDate != null
-        ? Timestamp.fromDate(_selectedDate!)
-        : null,
-    'amount': double.tryParse(_amountController.text) ?? 0,
-    'category': selectedSubCategory,
-    'subCategory': selectedSubSubCategory,
-    'paymentMode': selectedPaymentMode,
-    'notes': _notesController.text,
-    'remindWeekly': _remindWeekly,
-    'remindMonthly': _remindMonthly,
-    'createdAt': Timestamp.now(),
-    // 'categoryColor': color.value, // Store color as int
-  };
-
-  try {
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('expenses')
-        .add(expenseData);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Expense saved!')),
-     
-    );
-   
-  final expenses = await GetExpenses().fetchUserExpenses();
-
-  for (var expense in expenses) {
-    print(expense);
-  }
-
-
-
-const encoder = JsonEncoder.withIndent('  ');
-
-for (var expense in expenses) {
-  // Convert Timestamp to readable String
-  expense = expense.map((key, value) {
-    if (value is Timestamp) {
-      return MapEntry(key, value.toDate().toIso8601String());
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in!')),
+      );
+      return;
     }
-    return MapEntry(key, value);
-  });
 
-  final prettyJson = encoder.convert(expense);
-  print(prettyJson);
-}
-  } catch (e) {
-    print(e);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error saving expense: $e')),
-    );
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a date!')),
+      );
+      return;
+    }
+
+    final category = controller.categories[controller.focusedIndex.value]['name'];
+    final color = controller.categories[controller.focusedIndex.value]['color'] as Color;
+
+    final expenseData = {
+      'type': category,
+      'date': Timestamp.fromDate(_selectedDate!),
+      'amount': double.tryParse(_amountController.text) ?? 0,
+      'category': selectedSubCategory,
+      'subCategory': selectedSubSubCategory,
+      'paymentMode': selectedPaymentMode,
+      'notes': _notesController.text,
+      'remindWeekly': _remindWeekly,
+      'remindMonthly': _remindMonthly,
+      'createdAt': Timestamp.now(),
+    };
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('expenses')
+          .add(expenseData);
+
+      _showSuccessDialog();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving expense: $e')),
+      );
+    }
   }
-}
 }

@@ -39,10 +39,10 @@
               "client_type": 3
             },
             {
-              "client_id": "69682297411-h1iv4vb3b66qn9q0v4c7vk3tg659rs1n.apps.googleusercontent.com",
+              "client_id": "69682297411-djubh2dvna7tdk7485dtopkevqasgdnf.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.suryateja.expensetracker"
+                "bundle_id": "com.surya.expensetrackerapp"
               }
             }
           ]
