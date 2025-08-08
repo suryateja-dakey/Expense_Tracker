@@ -8,8 +8,9 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double elevation;
   final Widget? leading;
   final String? heroTag;
+   Function? onPressedBack;
 
-  const CommonAppBar({
+   CommonAppBar({
     super.key,
     required this.title,
     this.showBackButton = true,
@@ -18,6 +19,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.elevation = 0.0,
     this.leading,
     this.heroTag,
+    this.onPressedBack
   });
 
   // Determine if the background color is dark to adjust text/icon color
@@ -28,7 +30,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     // Choose text/icon color based on background brightness
-    final foregroundColor = _isDarkColor(backgroundColor) ? Colors.black : Colors.black;
+    final foregroundColor = _isDarkColor(backgroundColor) ? Colors.white : Colors.black;
 
     final appBar = AppBar(
       elevation: elevation,
@@ -38,7 +40,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
           (showBackButton
               ? IconButton(
                   icon: Icon(Icons.arrow_back_ios , color: foregroundColor),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () =>Navigator.pop(context),
                 )
               : null),
       title: Text(

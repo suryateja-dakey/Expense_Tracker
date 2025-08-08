@@ -1,14 +1,22 @@
 // ignore_for_file: use_key_in_widget_constructors, avoid_print
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:expense_tracker/database_services/get_user_salary.dart';
 import 'package:expense_tracker/firebase_services/firebase_core_calls.dart';
 import 'package:expense_tracker/firebase_services/firebase_get_expenses.dart';
+import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/pages/add_expenses.dart';
 import 'package:expense_tracker/pages/authentications/login.dart';
 import 'package:expense_tracker/pages/monthly_view.dart';
+import 'package:expense_tracker/pages/profile.dart';
+import 'package:expense_tracker/widgets/common_stats_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import '../controllers/expense_controller.dart';
 import '../widgets/custom_styled_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +27,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final controller = Get.put(ExpenseController());
+  final GetUserSalary salaryController = Get.put(GetUserSalary()); // New instance for salary
   final ScrollController _scrollController = ScrollController();
   static const double cardWidth = 186.0;
   static const double cardSpacing = 35.0;
@@ -31,6 +40,35 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _scrollController.addListener(_onScroll);
     getExpenseData();
+    // Fetch and print salary
+    salaryController.fetchUserSalary().then((success) {
+      if (success) {
+        print('Monthly Salary: ₹${salaryController.monthlySalary.value.toStringAsFixed(2)}');
+      } else {
+          final user = FirebaseAuth.instance.currentUser;
+         final userDoc =  FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid)
+          .get();
+    
+        // Show bottom sheet for new user
+        _showSalaryBottomSheet(user!.uid);
+      
+        //  _showSalaryBottomSheet(user.uid);
+        print('Failed to fetch salary or no salary data available');
+      }
+    });
+  }
+   void _showSalaryBottomSheet(String userId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.grey[900],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SalaryInputBottomSheet(userId: userId),
+    );
   }
 
   Future<dynamic> getExpenseData() async {
@@ -116,21 +154,29 @@ class _HomePageState extends State<HomePage> {
                   child: PopupMenuButton<String>(
                     icon: const Icon(
                       Icons.dehaze_outlined,
-                      color: Color(0xFF7ACB78),
+                      color: Colors.greenAccent ,
                       size: 24,
                     ),
                     offset: const Offset(0, 40),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                       side: const BorderSide(
-                        color: Color(0xFF7ACB78),
+                        color: Colors.greenAccent,
                         width: 2,
                       ),
                     ),
                     onSelected: (value) {
                       if (value == 'settings') {
                         print('Navigate to Settings');
-                      } else if (value == 'logout') {
+                      } else if (value == 'profile'){
+                        print('profile');
+                        // ProfilePage
+                        Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ProfilePage()),
+                            );
+                      }
+                      else if (value == 'logout') {
                         print('Logging out...');
                         repo.signOut();
                         Navigator.pushReplacement(
@@ -140,14 +186,29 @@ class _HomePageState extends State<HomePage> {
                       }
                     },
                     itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'settings', child: Text('Settings')),
-                      PopupMenuItem(value: 'logout', child: Text('Logout')),
+                      PopupMenuItem(value: 'profile', child: Text('Profile')),
+                        PopupMenuItem(value: 'logout', child: Text('Logout')),
+                      PopupMenuItem(value: 'settings', child: Text('About us')),
+                      // PopupMenuItem(value: 'settings', child: Text('Settings')),
+                    
                     ],
                   ),
                 ),
               ),
 
-              // Title
+              // Title and Logo
+              Padding(
+                padding: const EdgeInsets.fromLTRB(34, 0, 0, 0),
+                child: Hero(
+                 tag: 'app-logo',
+                  child: SvgPicture.asset(
+                    controller.appAssets[0]["logo"].toString(),
+                    width: 44,
+                    height: 44,
+                    colorFilter: ColorFilter.mode(Colors.greenAccent, BlendMode.srcIn),
+                  ),
+                ),
+              ),
               const Padding(
                 padding: EdgeInsets.only(top: 20, left: 28),
                 child: Text(
@@ -161,6 +222,22 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
+              // // Display Monthly Salary
+              // Padding(
+              //   padding: const EdgeInsets.only(top: 10, left: 28),
+              //   child: Obx(
+              //     () => Text(
+              //       'Monthly Salary: ₹${salaryController.monthlySalary.value.toStringAsFixed(2)}',
+              //       style: const TextStyle(
+              //         fontSize: 18,
+              //         color: Colors.white,
+              //         fontWeight: FontWeight.w500,
+              //         fontFamily: 'Inter',
+              //       ),
+              //     ),
+              //   ),
+              // ),
+
               // Category Names (horizontal)
               Padding(
                 padding: const EdgeInsets.only(top: 30, left: 20),
@@ -172,8 +249,7 @@ class _HomePageState extends State<HomePage> {
                     separatorBuilder: (_, __) => const SizedBox(width: 25),
                     itemBuilder: (context, index) {
                       return Obx(() {
-                        final isFocused =
-                            controller.focusedIndex.value == index;
+                        final isFocused = controller.focusedIndex.value == index;
                         return GestureDetector(
                           onTap: () {
                             controller.setFocusedIndex(index);
@@ -253,8 +329,7 @@ class _HomePageState extends State<HomePage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) =>
-                                              const AddExpensePage(),
+                                          builder: (_) => AddExpensePage(),
                                         ),
                                       );
                                     },
@@ -269,8 +344,10 @@ class _HomePageState extends State<HomePage> {
 
                     return Row(children: cards);
                   }),
+                 
                 ),
               ),
+             
             ],
           ),
         ),

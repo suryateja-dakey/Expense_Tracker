@@ -4,12 +4,17 @@ import 'package:flutter/material.dart';
 class ExpenseController extends GetxController {
   var focusedIndex = 0.obs;
 
+  final appAssets =[{
+    'name':'Spendex',
+    'logo':'assets/file_svgs/app_logo.svg'
+  }];
+
   final categories = [
     {
       'name': 'Essentials',
       'image': 'assets/expense_category_items/essentials_animation.json',
       'amount':"0.0",
-      'color': const Color(0xFF7ACB78),
+      'color':Colors. greenAccent,
       
     },
     {

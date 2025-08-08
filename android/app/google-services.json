@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "69682297411-j21skedgrtt86ljps4mkgu738cnp8ccj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.expense_tracker",
+            "certificate_hash": "e3e63dcd5083b0012ebe09e87749c6df2bbffbb2"
+          }
+        },
+        {
+          "client_id": "69682297411-l8qk8v8gb0riqqrs824gaovlikad5tua.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.expense_tracker",
+            "certificate_hash": "a8ee7a906fd5c27f82b882cff9ff7cc069a50de5"
+          }
+        },
+        {
           "client_id": "69682297411-1kktopanugrs5f6poas4v72n6ljgki4m.apps.googleusercontent.com",
           "client_type": 3
         }
